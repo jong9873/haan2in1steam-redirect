@@ -1,5 +1,3 @@
-// pages/index.js
-
 export async function getServerSideProps() {
   const sheetJsonUrl =
     "https://docs.google.com/spreadsheets/d/1hMzZXcw6eF2erhiLVOi6ZCSkwYQFFOhoGywPnRZI_cA/gviz/tq?tqx=out:json";
@@ -12,6 +10,8 @@ export async function getServerSideProps() {
     const latestRow = rows[rows.length - 1];
     const latestUrl = latestRow?.c?.[1]?.v;
 
+    console.log("🟢 Redirect target:", latestUrl); // ✅ 이 줄이 핵심!
+
     if (!latestUrl || !latestUrl.startsWith("http")) {
       throw new Error("Invalid or missing redirect URL");
     }
@@ -23,7 +23,7 @@ export async function getServerSideProps() {
       },
     };
   } catch (error) {
-    console.error("Redirection failed:", error);
+    console.error("🔴 Redirection failed:", error);
     return {
       notFound: true,
     };
