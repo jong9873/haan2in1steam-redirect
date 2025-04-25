@@ -10,7 +10,10 @@ export async function getServerSideProps() {
     const latestRow = rows[rows.length - 1];
     const latestUrl = latestRow?.c?.[1]?.v;
 
-    console.log("🟢 Redirect to:", latestUrl);
+    // 👇 여기 로그들 추가!
+    console.log("🟢 rows:", rows);
+    console.log("🟢 latestRow:", latestRow);
+    console.log("🟢 latestUrl:", latestUrl);
 
     if (!latestUrl || !latestUrl.startsWith("http")) {
       throw new Error("Invalid or missing redirect URL");
@@ -23,7 +26,7 @@ export async function getServerSideProps() {
       },
     };
   } catch (error) {
-    console.error("🔴 Redirection failed:", error);
+    console.error("❌ Redirection failed:", error);
     return {
       notFound: true,
     };
