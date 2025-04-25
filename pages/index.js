@@ -1,5 +1,3 @@
-// pages/index.js
-
 export async function getServerSideProps() {
   const sheetJsonUrl =
     "https://docs.google.com/spreadsheets/d/1hMzZXcw6eF2erhiLVOi6ZCSkwYQFFOhoGywPnRZI_cA/gviz/tq?tqx=out:json";
@@ -23,7 +21,7 @@ export async function getServerSideProps() {
       },
     };
   } catch (error) {
-    console.error("Redirection failed", error);
+    console.error("Redirection failed:", error);
     return {
       props: {},
     };
@@ -31,5 +29,5 @@ export async function getServerSideProps() {
 }
 
 export default function Home() {
-  return <div>리디렉션 중입니다...</div>;
+  return <div>잠시만 기다려주세요. 리디렉션 중입니다...</div>;
 }
