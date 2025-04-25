@@ -1,3 +1,5 @@
+// pages/api/redirect.js
+
 export default async function handler(req, res) {
   const sheetJsonUrl =
     "https://docs.google.com/spreadsheets/d/1hMzZXcw6eF2erhiLVOi6ZCSkwYQFFOhoGywPnRZI_cA/gviz/tq?tqx=out:json";
@@ -6,10 +8,13 @@ export default async function handler(req, res) {
     const response = await fetch(sheetJsonUrl);
     const text = await response.text();
 
-    // JSONP → JSON 파싱
-    const json = JSON.parse(text.replace(/^.*?\(|\);?$/g, ""));
+    // 💥 JSONP 주석 및 wrapper 제거 처리
+    const cleanText = text
+      .replace(/^[^\(]*\(/, '')  // 함수명 포함 앞부분 제거
+      .replace(/\);?\s*$/, '');  // 끝 괄호 제거
 
-    // rows 존재 여부 확인
+    const json = JSON.parse(cleanText);
+
     const rows = json?.table?.rows;
     if (!rows || rows.length === 0) throw new Error("rows 비어 있음");
 
@@ -21,13 +26,13 @@ export default async function handler(req, res) {
     }
 
     const cell = columns[1];
-    const latestUrl = cell?.v || cell?.f || null;
+    const rawUrl = cell?.v || cell?.f || '';
+    const latestUrl = String(rawUrl).trim();
 
-    if (!latestUrl || typeof latestUrl !== "string" || !latestUrl.startsWith("http")) {
-      throw new Error("유효하지 않은 URL 구조");
+    if (!latestUrl.startsWith("http")) {
+      throw new Error("유효하지 않은 URL 구조: " + latestUrl);
     }
 
-    // 최종 리디렉션
     res.writeHead(302, { Location: latestUrl });
     res.end();
   } catch (e) {
