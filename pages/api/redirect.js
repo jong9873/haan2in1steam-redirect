@@ -6,28 +6,29 @@ export default async function handler(req, res) {
     const response = await fetch(sheetJsonUrl);
     const text = await response.text();
 
-    // ✅ 응답 전체 찍기
-    console.log("✅ Raw text preview:", text.slice(0, 500));
+    // ✅ 원본 응답 일부 출력
+    console.log("✅ Raw text preview:", text.slice(0, 300));
 
-    // ✅ JSON 파싱
+    // ✅ JSON 변환
     const json = JSON.parse(text.replace(/^.*?\(|\);?$/g, ""));
 
-    // ✅ 전체 구조 확인
-    console.log("✅ Parsed JSON:", JSON.stringify(json, null, 2));
-
+    // ✅ 구조 확인
     const rows = json?.table?.rows;
     console.log("✅ rows =", rows);
 
     const latestRow = rows?.[rows.length - 1];
     console.log("✅ latestRow =", latestRow);
 
-    const latestUrl = latestRow?.c?.[1]?.v;
+    // ✅ URL 추출 로직 개선 (v 또는 f 사용)
+    const urlCandidate = latestRow?.c?.[1];
+    const latestUrl = urlCandidate?.v ?? urlCandidate?.f ?? null;
     console.log("✅ latestUrl =", latestUrl);
 
     if (!latestUrl || !latestUrl.startsWith("http")) {
       throw new Error("유효하지 않은 URL");
     }
 
+    // ✅ 리디렉션
     res.writeHead(302, { Location: latestUrl });
     res.end();
   } catch (e) {
