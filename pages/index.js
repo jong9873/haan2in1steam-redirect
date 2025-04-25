@@ -7,13 +7,10 @@ export async function getServerSideProps() {
   try {
     const res = await fetch(sheetJsonUrl);
     const text = await res.text();
-    const json = JSON.parse(text.replace(/^.*?\(|\);?$/g, "")); // JSON 파싱
-
+    const json = JSON.parse(text.replace(/^.*?\(|\);?$/g, ""));
     const rows = json.table.rows;
     const latestRow = rows[rows.length - 1];
     const latestUrl = latestRow?.c?.[1]?.v;
-
-    console.log("🔗 Redirecting to:", latestUrl); // 로그 확인용
 
     if (!latestUrl || !latestUrl.startsWith("http")) {
       throw new Error("Invalid or missing redirect URL");
@@ -26,11 +23,13 @@ export async function getServerSideProps() {
       },
     };
   } catch (error) {
-    console.error("❌ Redirection failed:", error);
-    return { notFound: true };
+    console.error("Redirection failed", error);
+    return {
+      props: {},
+    };
   }
 }
 
 export default function Home() {
-  return null;
+  return <div>리디렉션 중입니다...</div>;
 }
