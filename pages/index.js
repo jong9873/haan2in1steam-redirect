@@ -1,11 +1,8 @@
 import { useEffect } from "react";
-import { useRouter } from "next/router";
 
 export default function Home() {
-  const router = useRouter();
-
   useEffect(() => {
-    router.replace("/redirect");
+    window.location.href = "/api/redirect"; // 서버 API 라우트 호출 → 302 리디렉션
   }, []);
 
   return <div>리디렉션 중입니다...</div>;
