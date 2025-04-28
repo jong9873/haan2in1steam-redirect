@@ -1,53 +1,47 @@
-// 파일 경로: your-project/pages/api/redirect.js
+// /pages/api/redirect.js
+
+let cachedUrl = null;
+let cacheTime = 0;
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5분
 
 export default async function handler(req, res) {
-  // 1) Google Sheets JSONP URL
-  const sheetJsonUrl =
-    "https://docs.google.com/spreadsheets/d/1hMzZXcw6eF2erhiLVOi6ZCSkwYQFFOhoGywPnRZI_cA/gviz/tq?tqx=out:json";
-
   try {
-    // 2) 원본 텍스트 응답
-    const response = await fetch(sheetJsonUrl);
+    const now = Date.now();
+
+    // 캐시가 있고, 5분 안 지났으면 캐시된 URL 사용
+    if (cachedUrl && (now - cacheTime) < CACHE_DURATION_MS) {
+      return res.status(200).json({ url: cachedUrl });
+    }
+
+    // 구글시트 데이터 가져오기
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1hMzZXcw6eF2erhiLVOi6ZCSkwYQFFOhoGywPnRZI_cA/gviz/tq?tqx=out:json';
+    const response = await fetch(sheetUrl);
     const text = await response.text();
 
-    // 3) JSONP 래퍼 및 주석 제거
-    const cleanText = text
-      .replace(/^\s*\/\*.*?\*\/\s*/, "") // /*O_o*/ 제거
-      .replace(/^.*?\(/, "")             // 함수 호출 앞부분 제거
-      .replace(/\);?$/, "");             // 끝 괄호 제거
+    // JSONP 포맷 정리
+    const jsonText = text
+      .replace(/^[^\(]*\(/, '')
+      .replace(/\);?$/, '');
+    const data = JSON.parse(jsonText);
 
-    // 4) 순수 JSON 파싱
-    const data = JSON.parse(cleanText);
-
-    // 5) rows 배열 가져오기
-    const rows = data.table?.rows;
-    if (!Array.isArray(rows) || rows.length === 0) {
-      throw new Error("rows 비어 있음");
-    }
-
-    // 6) 마지막 행에서 두 번째 셀 가져오기
+    // B열 마지막 URL 가져오기
+    const rows = data.table.rows;
     const latestRow = rows[rows.length - 1];
-    const columns = latestRow.c;
-    if (!Array.isArray(columns) || columns.length < 2) {
-      throw new Error("c[1] 없음");
+    const latestUrl = latestRow?.c?.[1]?.v || latestRow?.c?.[1]?.f;
+
+    if (!latestUrl) {
+      return res.status(500).json({ error: '❌ 구글시트에서 URL을 찾지 못했습니다.' });
     }
 
-    // 7) v 또는 f 필드에서 URL 추출
-    const cell = columns[1];
-    const latestUrl = String(cell.v || cell.f || "").trim();
+    // 캐시 저장
+    cachedUrl = latestUrl;
+    cacheTime = now;
 
-    // 8) 유효성 검사
-    if (!latestUrl.startsWith("http")) {
-      throw new Error("유효하지 않은 URL: " + latestUrl);
-    }
+    // 결과 반환
+    return res.status(200).json({ url: latestUrl });
 
-    // 9) 302 리디렉션
-    res.writeHead(302, { Location: latestUrl });
-    res.end();
-
-  } catch (e) {
-    // 에러 발생 시 정확한 사유를 브라우저에 출력
-    console.error("❌ 리디렉션 실패:", e.message);
-    res.status(500).send("리디렉션 실패: " + e.message);
+  } catch (err) {
+    console.error('❌ 에러 발생:', err);
+    return res.status(500).json({ error: '❌ 서버 오류' });
   }
 }
