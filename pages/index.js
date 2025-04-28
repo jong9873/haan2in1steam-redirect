@@ -19,17 +19,5 @@ export default function Home() {
     fetchRedirect();
   }, []);
 
-  return (
-    <div style={{ 
-      height: '100vh', 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      flexDirection: 'column',
-      fontFamily: 'sans-serif'
-    }}>
-      <h1>리디렉션 중입니다...</h1>
-      <p>잠시만 기다려주세요.</p>
-    </div>
-  );
+  return null; // 🔥 아무것도 렌더링 안함
 }
